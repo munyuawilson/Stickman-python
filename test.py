@@ -21,6 +21,9 @@ stickman_width = 50
 stickman_height = 60
 stickman_img = pygame.transform.scale(stickman_img, (stickman_width, stickman_height))
 stickman_x = screen_width // 2 - stickman_width // 2
+
+bottom_restriction = int(screen_height * 0.4)
+stickman_y = screen_height - stickman_height - bottom_restriction
 stickman_y = screen_height - stickman_height - 10
 stickman_speed = 5
 
@@ -30,20 +33,16 @@ obstacle_width = 50
 obstacle_height = 50
 
 x_range = int(screen_width * 0.4)
-min_x = int(screen_width * 0.3)  # Adjust the percentage as needed
-max_x = int(screen_width * 0.7)  # Adjust the percentage as needed
-
-
+min_x = int((screen_width - x_range) / 2)
+max_x = min_x + x_range  # Adjust the percentage as needed
 
 obstacle_x = random.randint(min_x, max_x)
 obstacle_y = random.randint(screen_height // 2, screen_height - obstacle_height)
 obstacle_speed = 3
 
-
-
 obstacle_img = pygame.transform.scale(obstacle_img, (obstacle_width, obstacle_height))
 
-# Set up the font for failure message, restart button, and score counter
+# Set up the font for the failure message, restart button, and score counter
 font = pygame.font.Font(None, 36)
 
 clock = pygame.time.Clock()
@@ -63,12 +62,13 @@ alpha = 0.1  # Learning rate
 gamma = 0.9  # Discount factor
 epsilon = 1  # Exploration rate
 epsilon_decay = 0.99
+
 # Define the states and actions
 states = {
-    "LEFT": 0,
-    "RIGHT": 1,
-    "UP": 2,
-    "DOWN": 3
+    ("LEFT", "UP"): 0,
+    ("LEFT", "DOWN"): 1,
+    ("RIGHT", "UP"): 2,
+    ("RIGHT", "DOWN"): 3
 }
 
 actions = [
@@ -77,16 +77,29 @@ actions = [
     pygame.K_UP,
     pygame.K_DOWN
 ]
+
 # Save the Q-table
 np.save("q_table.npy", q_table)
+
+
 # Helper function to get the current state
 def get_state():
-    return (int(stickman_x < obstacle_x), int(stickman_x > obstacle_x), int(stickman_y < obstacle_y), int(stickman_y > obstacle_y))
+    if stickman_x < obstacle_x:
+        x_state = "LEFT"
+    else:
+        x_state = "RIGHT"
+
+    if stickman_y < obstacle_y:
+        y_state = "UP"
+    else:
+        y_state = "DOWN"
+
+    return (x_state, y_state)
+
 
 # Helper function to choose an action based on the epsilon-greedy policy
-# Helper function to choose an action based on the epsilon-greedy policy
 def choose_action(state):
-    state_index = np.ravel(state, order='C')[0]
+    state_index = states[state]
     if random.uniform(0, 1) < epsilon:
         action = random.choice(range(num_actions))
     else:
@@ -94,12 +107,10 @@ def choose_action(state):
     return action
 
 
-
-# Helper function to update the Q-values
 # Helper function to update the Q-values
 def update_q_value(state, action, reward, next_state):
-    state_index = np.ravel(state, order='C')[0]
-    next_state_index = np.ravel(next_state, order='C')[0]
+    state_index = states[state]
+    next_state_index = states[next_state]
     max_q_value = np.max(q_table[next_state_index])
     q_table[state_index, action] = (1 - alpha) * q_table[state_index, action] + alpha * (reward + gamma * max_q_value)
 
@@ -132,7 +143,8 @@ while running:
                 stickman_x += stickman_speed
 
         elif actions[action] == pygame.K_UP:
-            stickman_y -= stickman_speed
+            if stickman_y - stickman_speed >= 0:  # Check upper boundary
+                stickman_y -= stickman_speed
         elif actions[action] == pygame.K_DOWN:
             stickman_y += stickman_speed
 
@@ -141,10 +153,6 @@ while running:
             stickman_x = 0
         elif stickman_x > screen_width - stickman_width:
             stickman_x = screen_width - stickman_width
-        elif stickman_y < 0:
-            stickman_y = 0
-        elif stickman_y > screen_height - stickman_height:
-            stickman_y = screen_height - stickman_height
 
         # Update obstacle position
         obstacle_x -= obstacle_speed
@@ -165,12 +173,12 @@ while running:
         next_state = get_state()
         update_q_value(state, action, reward, next_state)
 
-        # Generate new obstacle when the current obstacle goes off-screen
+        # Generate a new obstacle when the current obstacle goes off-screen
         if obstacle_x + obstacle_width < 0:
             obstacle_x = screen_width
             obstacle_y = random.randint(screen_height // 2, screen_height - obstacle_height)
             score += 1
-        
+
     else:
         # Display failure message
         text = font.render("You failed!", True, (255, 0, 0))
