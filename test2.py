@@ -2,45 +2,17 @@ from ursina import *
 
 app = Ursina()
 
-class Stickman(Entity):
-    def __init__(self, position=(0, 0, 0)):
-        super().__init__(
-            model='quad',
-            scale=(0.2, 0.6),
-            color=color.white,
-            position=position,
-            collider='box',
-        )
-
-    def attack(self):
-        self.animate_scale_y(0.1, duration=0.1, curve=curve.linear)
-        invoke(self.reset_attack, delay=0.2)
-
-    def reset_attack(self):
-        self.animate_scale_y(0.6, duration=0.1, curve=curve.linear)
-
-class Street(Entity):
-    def __init__(self):
-        super().__init__(
-            model='quad',
-            texture='street_texture.png',  # Replace with your street texture image
-            scale=(10, 1, 1),
-            z=-1  # Place the street behind the stickman characters
-        )
-
-player = Stickman(position=(-2, 0, 0))
-enemy = Stickman(position=(2, 0, 0))
-street = Street()
-
+stickman = Entity(model='stickman', color=color.red,animator='fight_animation')
+stickman.position = (0, 0, 0)
+stickman.scale = (0.05, 0.05, 0.05)  # Adjust the scale to reduce the size
+# Remove the rotation line to keep the stickman straight
 def update():
-    if held_keys['a']:
-        player.x -= 0.1
-    if held_keys['d']:
-        player.x += 0.1
-    if held_keys['space']:
-        player.attack()
+    if held_keys['f']:  # Trigger the fight animation when the 'f' key is held
+        stickman.animator.play('fight_animation')
+    elif held_keys['w']:  # Trigger the walk animation when the 'w' key is held
+        stickman.animator.play('walk_animation')
+    else:
+        stickman.animator.stop()  # Stop the animation when no key is pressed
 
-def on_mouse_down():
-    enemy.attack()
 
 app.run()
