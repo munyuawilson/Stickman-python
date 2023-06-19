@@ -37,7 +37,7 @@ def detect_object():
     gray_screenshot = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
 
     # Object Detection (example: template matching)
-    template = cv2.imread('templat.png', 0)  # Replace with the path to your template image
+    template = cv2.imread('black_guy.png', 0)  # Replace with the path to your template image
     result = cv2.matchTemplate(gray_screenshot, template, cv2.TM_CCOEFF_NORMED)
     threshold = 0.8  # Adjust the threshold as per your requirement
     locations = np.where(result >= threshold)
