@@ -44,12 +44,7 @@ def detect_object():
     object_coordinates = list(zip(*locations[::-1]))
     return object_coordinates
     
-def play_game():
-    
-   
-    time.sleep(2)
-    
-    
+def play_game():  
     pyautogui.keyUp('right') 
     time.sleep(3)
     pyautogui.keyDown('right') 
