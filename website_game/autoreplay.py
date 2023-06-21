@@ -16,7 +16,7 @@ def start_game():
     pyautogui.click(x=x,y=y)
     
 def choose_chapter():
-    x=427
+    x=420
     y=460
     
     pyautogui.click(x=x,y=y)
@@ -51,25 +51,18 @@ def play_game():
     
     while True:
         
-        pyautogui.keyDown('z')
-        pyautogui.keyUp('z')
-        pyautogui.keyDown('x')
-        pyautogui.keyUp('x')
+        
+        if keyboard.is_pressed('e'):
+            exit()
+        else:
+            pyautogui.keyDown('z')
+            pyautogui.keyUp('z')
+            pyautogui.keyDown('x')
+            pyautogui.keyUp('x')
+            
         
         
         
-
-    pyautogui.keyDown('right')
-    time.sleep(3)
-    pyautogui.keyUp('right') 
-        
-    
-    
-
-
-        
-          
-
 start_game()
 time.sleep(5)
 choose_chapter()
